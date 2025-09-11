@@ -79,3 +79,9 @@ export const engagementAPI = {
 };
 
 export default api;
+ 
+// Users API
+export const usersAPI = {
+  updateMe: (data: any) => api.put('/auth/update', data),
+  getMe: () => api.get('/auth/me'),
+};

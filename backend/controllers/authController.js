@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const auth = require('../middleware/auth');
 
 exports.register = async (req, res) => {
   try {
@@ -54,10 +55,27 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // check password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // check password (support legacy plaintext imports by re-hashing on first login)
+    let isMatch = false;
+    try {
+      isMatch = await bcrypt.compare(password, user.password);
+    } catch (e) {
+      isMatch = false;
+    }
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      const looksHashed = typeof user.password === 'string' && user.password.startsWith('$2');
+      if (!looksHashed && password === user.password) {
+        try {
+          const newHash = await bcrypt.hash(password, 10);
+          user.password = newHash;
+          await user.save();
+          isMatch = true;
+        } catch (rehashErr) {
+          return res.status(400).json({ message: "Invalid credentials" });
+        }
+      } else {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
     }
 
     // generate token
@@ -67,10 +85,60 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    const userResponse = { id: String(user._id), user_name: user.name, user_email: user.email, role: user.role, avatarUrl: null };
+    const userResponse = { id: String(user._id), user_name: user.name, user_email: user.email, name: user.name, email: user.email, role: user.role, avatarUrl: null };
     res.status(200).json({ message: "Login successful", token, user: userResponse });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.me = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).lean();
+    if (!user) return res.status(404).json({ message: 'Not found' });
+    const userResponse = {
+      id: String(user._id),
+      user_name: user.name,
+      user_email: user.email,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || null,
+      location: user.location || {},
+      position: user.position || null,
+      specialization: user.specialization || null,
+      role: user.role,
+      avatarUrl: null,
+    };
+    res.json({ user: userResponse });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+exports.updateMe = async (req, res) => {
+  try {
+    const allowed = ['name', 'email', 'phone', 'location', 'position', 'specialization'];
+    const updates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) updates[key] = key === 'email' ? String(req.body[key]).toLowerCase() : req.body[key];
+    }
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: updates }, { new: true });
+    const userResponse = {
+      id: String(user._id),
+      user_name: user.name,
+      user_email: user.email,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || null,
+      location: user.location || {},
+      position: user.position || null,
+      specialization: user.specialization || null,
+      role: user.role,
+      avatarUrl: null,
+    };
+    res.json({ user: userResponse });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
 };
 

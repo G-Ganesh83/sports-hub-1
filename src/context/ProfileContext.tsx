@@ -3,6 +3,8 @@ import { createContext, useContext, useMemo, useState, ReactNode } from 'react';
 type PlayerProfile = {
   role: 'player';
   fullName: string;
+  email?: string;
+  phone?: string;
   age?: number;
   sport: string;
   state: string;
@@ -10,6 +12,7 @@ type PlayerProfile = {
   district?: string;
   country?: string;
   club?: string;
+  position?: string;
   bio?: string;
   photoUrl?: string;
   performanceLink?: string;
@@ -21,10 +24,13 @@ type PlayerProfile = {
 type SelectorProfile = {
   role: 'coach';
   fullName: string;
+  email?: string;
+  phone?: string;
   selectorRole: 'Coach' | 'Selector';
   sport: string;
   state: string;
   city: string;
+  specialization?: string;
   bio?: string;
   photoUrl?: string;
   credentialsUrl?: string;

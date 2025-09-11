@@ -17,6 +17,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  phone: {
+    type: String,
+  },
+  location: {
+    state: { type: String },
+    city: { type: String },
+    country: { type: String },
+  },
+  position: { type: String }, // for players
+  specialization: { type: String }, // for selectors/coaches
   role: {
     type: String,
     enum: ["player", "selector", "scout", "coach", "fan"], // allowed roles (expanded to match UI)

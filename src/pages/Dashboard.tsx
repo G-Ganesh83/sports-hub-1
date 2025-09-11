@@ -12,10 +12,11 @@ import { Textarea } from '@/components/ui/textarea';
 import InputField from '@/components/InputField';
 import TextArea from '@/components/TextArea';
 import FileUpload from '@/components/FileUpload';
+import AvatarGenerator from '@/components/AvatarGenerator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useProfile } from '@/context/ProfileContext';
-import api, { playerAPI } from '@/services/api';
+import api, { playerAPI, usersAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
@@ -34,17 +35,23 @@ const Dashboard = () => {
     (async () => {
       setLoadingProfile(true);
       try {
-        const res = await api.get('/players/me');
-        const p = res.data;
+        const [userRes, playerRes] = await Promise.allSettled([
+          usersAPI.getMe() as any,
+          api.get('/players/me') as any,
+        ]);
+        const u = userRes.status === 'fulfilled' ? (userRes.value.data.user || {}) : {};
+        const p = playerRes.status === 'fulfilled' ? playerRes.value.data : {};
         const profileData = {
           role: p.role === 'coach' ? 'coach' : 'player',
-          fullName: p.fullName || user?.name || '',
+          fullName: u.name || p.fullName || user?.name || '',
+          email: u.email || user?.email || '',
+          phone: u.phone || '',
           age: p.age,
           sport: p.sport || 'Cricket',
-          state: p.extra?.state || '',
-          city: p.location || '',
+          state: (u.location && u.location.state) || p.extra?.state || '',
+          city: (u.location && u.location.city) || p.location || '',
           district: p.extra?.district || '',
-          country: p.extra?.country || 'India',
+          country: (u.location && u.location.country) || p.extra?.country || 'India',
           club: p.extra?.club || '',
           bio: p.bio,
           achievements: p.achievements ? p.achievements.split(', ').map(a => {
@@ -56,10 +63,11 @@ const Dashboard = () => {
           skills: p.extra?.skills ? 
             (typeof p.extra.skills === 'string' ? JSON.parse(p.extra.skills) : p.extra.skills) : 
             [],
-          expertise: p.extra?.expertise,
+          expertise: u.specialization || p.extra?.expertise,
           coachingStyle: p.extra?.coachingStyle,
           pastExperience: p.extra?.pastExperience,
           organization: p.extra?.organization,
+          position: u.position || '',
         };
         
         setProfile(profileData as any);
@@ -135,7 +143,9 @@ const Dashboard = () => {
   function PlayerEditForm({ onClose }: { onClose: () => void }) {
     const p = profile.role === 'player' ? profile : undefined;
     const [fullName, setFullName] = useState(p?.fullName || '');
-    const [email, setEmail] = useState(user?.email || '');
+    const [email, setEmail] = useState((profile as any).email || user?.email || '');
+    const [position, setPosition] = useState((profile as any).position || '');
+    const [phone, setPhone] = useState((profile as any).phone || '');
     const [age, setAge] = useState(p?.age?.toString() || '');
     const [sport, setSport] = useState(p?.sport || 'Cricket');
     const [state, setState] = useState(p?.state || '');
@@ -193,7 +203,16 @@ const Dashboard = () => {
           skills,
         });
         
-        // Then update backend
+        // Update user master record
+        await usersAPI.updateMe({
+          name: fullName,
+          email,
+          phone,
+          position,
+          location: { state, city, country },
+        });
+
+        // Then update backend player profile
         await playerAPI.createOrUpdateProfile({
           role: 'player',
           fullName,
@@ -243,6 +262,10 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField id="fullName" label="Name" placeholder="Full Name" value={fullName} onChange={setFullName} />
               <InputField id="role" label="Role" value={'Player'} onChange={() => {}} readOnly />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField id="phone" label="Phone" placeholder="Phone number" value={phone} onChange={setPhone} />
+              <InputField id="position" label="Position" placeholder="e.g., Batsman / Midfielder" value={position} onChange={setPosition} />
             </div>
             <InputField id="email" label="Email" placeholder="Email" value={email} onChange={setEmail} />
             
@@ -366,8 +389,9 @@ const Dashboard = () => {
   function SelectorEditForm({ onClose }: { onClose: () => void }) {
     const s = profile.role === 'coach' ? profile : undefined;
     const [fullName, setFullName] = useState(s?.fullName || '');
-    const [email, setEmail] = useState(user?.email || '');
-    const [selectorRole, setSelectorRole] = useState<'Coach' | 'Selector'>(s?.selectorRole || 'Coach');
+    const [email, setEmail] = useState((profile as any).email || user?.email || '');
+    const [phone, setPhone] = useState((profile as any).phone || '');
+    const selectorRole = (profile as any).role === 'coach' ? 'Coach' : 'Selector';
     const [sport, setSport] = useState(s?.sport || 'Cricket');
     const [state, setState] = useState(s?.state || '');
     const [city, setCity] = useState(s?.city || '');
@@ -392,10 +416,11 @@ const Dashboard = () => {
         setProfile({
           role: 'coach',
           fullName,
-          selectorRole,
+          selectorRole: selectorRole as 'Coach' | 'Selector',
           sport,
           state,
           city,
+          phone,
           bio,
           photoUrl,
           credentialsUrl,
@@ -406,6 +431,15 @@ const Dashboard = () => {
           organization,
         });
         
+        // Update user master record
+        await usersAPI.updateMe({
+          name: fullName,
+          email,
+          phone,
+          specialization: expertise,
+          location: { state, city, country: (profile as any).country || '' },
+        });
+
         await playerAPI.createOrUpdateProfile({
           role: 'coach',
           fullName,
@@ -422,7 +456,6 @@ const Dashboard = () => {
             pastExperience,
             organization,
             state,
-            email,
             eventDate,
           },
         });
@@ -463,13 +496,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="selectorRole">Role</Label>
-                <Select value={selectorRole} onValueChange={(v: 'Coach' | 'Selector') => setSelectorRole(v)}>
-                  <SelectTrigger id="selectorRole"><SelectValue placeholder="Role" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Coach">Coach</SelectItem>
-                    <SelectItem value="Selector">Selector</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input id="selectorRole" value={selectorRole} readOnly />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="sport">Sport</Label>
@@ -485,6 +512,10 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-4">
               <InputField id="state" label="State" placeholder="State" value={state} onChange={setState} />
               <InputField id="city" label="City" placeholder="City" value={city} onChange={setCity} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField id="phone" label="Phone" placeholder="Phone number" value={phone} onChange={setPhone} />
+              <InputField id="expertise" label="Specialization" placeholder="e.g., Talent Scouting" value={expertise} onChange={setExpertise} />
             </div>
             
             <InputField id="organization" label="Organization/Club" placeholder="Organization or Club" value={organization} onChange={setOrganization} />
@@ -946,15 +977,26 @@ const Dashboard = () => {
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:shadow-lg"><Edit3 className="w-4 h-4 mr-2" /> Edit Profile</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="text-xl">Edit Profile ({userRole === 'player' ? 'Player' : 'Selector/Coach/Scout'})</DialogTitle>
-                </DialogHeader>
-                {userRole === 'player' ? (
-                  <PlayerEditForm onClose={() => setEditOpen(false)} />
-                ) : (
-                  <SelectorEditForm onClose={() => setEditOpen(false)} />
-                )}
+              <DialogContent className="sm:max-w-[600px] w-full p-0 overflow-hidden">
+                <div className="sticky top-0 z-10 bg-white border-b px-6 py-4">
+                  <DialogHeader className="p-0">
+                    <DialogTitle className="text-xl">Edit Profile ({userRole === 'player' ? 'Player' : 'Selector/Coach/Scout'})</DialogTitle>
+                  </DialogHeader>
+                </div>
+                <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+                  <div className="w-full flex items-center justify-center mb-4">
+                    <AvatarGenerator name={profile.fullName || user?.name || 'User'} size={96} />
+                  </div>
+                  {userRole === 'player' ? (
+                    <PlayerEditForm onClose={() => setEditOpen(false)} />
+                  ) : (
+                    <SelectorEditForm onClose={() => setEditOpen(false)} />
+                  )}
+                </div>
+                <div className="sticky bottom-0 z-10 bg-white border-t px-6 py-4 flex items-center justify-end gap-2">
+                  <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+                  {/* Save button is handled inside forms; keeping footer for UX consistency */}
+                </div>
               </DialogContent>
             </Dialog>
           </div>
