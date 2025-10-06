@@ -19,6 +19,7 @@ import Login from "./pages/Login";
 import Details from "./pages/Details";
 import PrivateRoute from "./components/PrivateRoute";
 import Test from "./pages/Test";
+import ChatWidget from "./components/ChatWidget";
 
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+        <ChatWidget />
         <Routes>
               <Route path="/test" element={<Test />} />
               <Route path="/signup" element={<Navigate to="/auth?mode=register" replace />} />
