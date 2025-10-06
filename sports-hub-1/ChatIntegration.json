@@ -1,0 +1,44 @@
+{
+  "description": "Complete AI chat widget integration (frontend + backend + routing + Gemini API) ready to plug into existing project.",
+  "frontend": {
+    "files_added": [
+      "src/components/ChatWidget.tsx"
+    ],
+    "files_modified": [
+      "src/App.tsx"
+    ],
+    "notes": [
+      "Chat bubble fixed bottom-left on all routes except /login, /signup, /auth",
+      "Smooth expand/collapse via Framer Motion",
+      "Scrollable history, typing indicator, styled bubbles",
+      "Sends POST to /api/chat with { message } and appends reply"
+    ]
+  },
+  "backend": {
+    "files_added": [
+      "backend/controllers/chatController.js",
+      "backend/routes/chatRoutes.js"
+    ],
+    "files_modified": [
+      "backend/server.js",
+      "backend/package.json"
+    ],
+    "api": {
+      "route": "POST /api/chat",
+      "body": "{ message: string }",
+      "response": "{ reply: string }",
+      "gemini_endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY",
+      "env": "GEMINI_API_KEY"
+    }
+  },
+  "env": {
+    "backend": [
+      "GEMINI_API_KEY=AIzaSyDnHMmFADXUVvageSetzz0V2ycmVKKUHfA"
+    ],
+    "frontend": [
+      "VITE_API_URL=http://localhost:5001/api"
+    ]
+  }
+}
+
+
