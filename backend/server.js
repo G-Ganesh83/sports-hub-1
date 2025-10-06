@@ -13,6 +13,8 @@ const User = require('./models/User');
 const authRoutes = require('./routes/authRoutes');
 const { register } = require('./controllers/authController');
 const profileRoutes = require('./routes/profileRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const selectorRoutes = require('./routes/selectorRoutes');
 
 const app = express();
 
@@ -55,6 +57,10 @@ app.use('/api/auth', authRoutes);
 app.post('/api/auth/signup', register);
 // Profiles
 app.use('/api/players', profileRoutes);
+// Events
+app.use('/api/events', eventRoutes);
+// Selectors
+app.use('/api/selectors', selectorRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import heroIllustration from '@/assets/hero-sports-illustration.jpg';
 
 export const Hero = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -26,22 +28,25 @@ export const Hero = () => {
             </p>
             
             <div className="pt-4">
-              <Button 
-                variant="hero" 
-                size="lg"
-                className="text-lg px-8 py-6"
-                onClick={() => navigate('/signup')}
-              >
-                Join as Player
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-lg px-8 py-6 ml-3"
-                onClick={() => navigate('/signup')}
-              >
-                Join as Selector
-              </Button>
+              {isAuthenticated ? (
+                <Button 
+                  variant="hero" 
+                  size="lg"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg"
+                  onClick={() => navigate('/chat')}
+                >
+                  Chat with AI Coach
+                </Button>
+              ) : (
+                <Button 
+                  variant="hero" 
+                  size="lg"
+                  className="text-lg px-8 py-6"
+                  onClick={() => navigate('/auth')}
+                >
+                  Get Started
+                </Button>
+              )}
             </div>
           </div>
 

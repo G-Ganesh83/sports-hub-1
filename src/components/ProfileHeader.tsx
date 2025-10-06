@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 interface ProfileHeaderProps {
   userType: "player" | "coach";
   name: string;
-  walletAddress: string;
   avatarUrl?: string;
   age?: number;
   sport?: string;
@@ -17,7 +16,7 @@ interface ProfileHeaderProps {
   sportCategory?: string;
 }
 
-export const ProfileHeader = ({ userType, name, walletAddress, avatarUrl, age, sport, country, tagline, expertise, organization, sportCategory }: ProfileHeaderProps) => {
+export const ProfileHeader = ({ userType, name, avatarUrl, age, sport, country, tagline, expertise, organization, sportCategory }: ProfileHeaderProps) => {
   const isSelector = userType === "coach";
 
   return (
@@ -62,10 +61,6 @@ export const ProfileHeader = ({ userType, name, walletAddress, avatarUrl, age, s
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Wallet Address</p>
-            <p className="font-mono text-sm bg-muted px-3 py-1 rounded-md mt-1">
-              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-            </p>
             <div className="mt-3 flex md:justify-end gap-2">
               {isSelector ? (
                 <>
@@ -79,7 +74,6 @@ export const ProfileHeader = ({ userType, name, walletAddress, avatarUrl, age, s
                 </>
               )}
             </div>
-            <Badge className="mt-2 bg-gradient-primary">🏆 NFT Badge Holder</Badge>
           </div>
         </div>
       </div>

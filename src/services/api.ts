@@ -41,7 +41,7 @@ api.interceptors.response.use(
 export const authAPI = {
   // Expects: { user_name, user_email, password, role? }
   register: (data: { user_name: string; user_email: string; password: string; role?: string }) =>
-    api.post('/auth/signup', data),
+    api.post('/auth/register', data),
   
   // Expects: { user_name? , user_email?, password }
   login: (data: { user_name?: string; user_email?: string; password: string }) =>
@@ -61,11 +61,9 @@ export const playerAPI = {
 // Event API
 export const eventAPI = {
   createEvent: (data: any) => api.post('/events', data),
-  getEvents: (params?: { page?: number; limit?: number }) =>
-    api.get('/events', { params }),
-  getEvent: (id: string) => api.get(`/events/${id}`),
-  expressInterest: (id: string) => api.post(`/events/${id}/interest`),
-  getApplicants: (id: string) => api.get(`/events/${id}/applicants`),
+  getMyEvents: () => api.get('/events'),
+  updateEvent: (id: string, data: any) => api.put(`/events/${id}`, data),
+  deleteEvent: (id: string) => api.delete(`/events/${id}`),
 };
 
 // Engagement API

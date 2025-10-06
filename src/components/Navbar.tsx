@@ -1,11 +1,14 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/hero-sports-illustration.jpg';
 
 export const Navbar = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <nav className="border-b border-border bg-background/80 backdrop-blur-md">
@@ -16,7 +19,7 @@ export const Navbar = () => {
             <span className="text-2xl font-bold text-primary">SportsHub</span>
           </Link>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             <Link 
               to="/dashboard" 
               className="text-foreground hover:text-primary transition-colors duration-200"
@@ -53,8 +56,11 @@ export const Navbar = () => {
                 </Avatar>
               </Link>
             )}
-            
-            <ConnectButton />
+
+            {!isAuthenticated && (
+              <Link to="/auth" className="text-foreground hover:text-primary transition-colors duration-200">Login / Register</Link>
+            )}
+
           </div>
         </div>
       </div>

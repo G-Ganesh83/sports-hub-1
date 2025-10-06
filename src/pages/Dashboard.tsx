@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, Trophy, Target, Calendar, Clock, MapPin, Link as LinkIcon, Settings, Edit3 } from 'lucide-react';
+import { TrendingUp, Users, Trophy, Target, Calendar, Clock, MapPin, Link as LinkIcon, Settings, Edit3, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +16,7 @@ import AvatarGenerator from '@/components/AvatarGenerator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useProfile } from '@/context/ProfileContext';
-import api, { playerAPI, usersAPI } from '@/services/api';
+import api, { playerAPI, usersAPI, eventAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
@@ -757,7 +757,65 @@ const Dashboard = () => {
   };
 
   const SelectorDashboard = () => {
-    const postedEvents = indiaEvents;
+    const [events, setEvents] = useState<Array<any>>([]);
+    const [loadingEvents, setLoadingEvents] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [editing, setEditing] = useState<any>(null);
+
+    async function loadEvents() {
+      try {
+        setLoadingEvents(true);
+        const res = await eventAPI.getMyEvents();
+        setEvents(res.data || []);
+      } finally {
+        setLoadingEvents(false);
+      }
+    }
+
+    useEffect(() => { loadEvents(); }, []);
+
+    function EventForm({ onClose, item }: { onClose: () => void; item?: any }) {
+      const [title, setTitle] = useState(item?.title || '');
+      const [description, setDescription] = useState(item?.description || '');
+      const [dateTime, setDateTime] = useState(item?.dateTime ? item.dateTime.slice(0,16) : '');
+      const [location, setLocation] = useState(item?.location || '');
+      const [contactInfo, setContactInfo] = useState(item?.contactInfo || '');
+      const [imageUrl, setImageUrl] = useState(item?.imageUrl || '');
+      const [saving, setSaving] = useState(false);
+
+      async function save() {
+        setSaving(true);
+        try {
+          const payload = { title, description, dateTime: new Date(dateTime), location, contactInfo, imageUrl };
+          if (item?._id) {
+            await eventAPI.updateEvent(item._id, payload);
+          } else {
+            await eventAPI.createEvent(payload);
+          }
+          await loadEvents();
+          onClose();
+        } finally {
+          setSaving(false);
+        }
+      }
+
+      return (
+        <div className="space-y-4">
+          <InputField id="title" label="Title of Event" value={title} onChange={setTitle} />
+          <TextArea id="description" label="Description" value={description} onChange={setDescription} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField id="dateTime" label="Date & Time" type="datetime-local" value={dateTime} onChange={setDateTime} />
+            <InputField id="location" label="Venue / Location" value={location} onChange={setLocation} />
+          </div>
+          <InputField id="contactInfo" label="Contact Info (optional)" value={contactInfo} onChange={setContactInfo} />
+          <InputField id="imageUrl" label="Event Image URL (optional)" value={imageUrl} onChange={setImageUrl} />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Event'}</Button>
+          </div>
+        </div>
+      );
+    }
     const applications = [
       { name: 'Rohit Patil', sport: 'Cricket', location: 'Pune, Maharashtra', status: 'Pending' },
       { name: 'Aman Verma', sport: 'Cricket', location: 'Mumbai, Maharashtra', status: 'Reviewed' },
@@ -797,40 +855,52 @@ const Dashboard = () => {
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <CardTitle>Posted Events</CardTitle>
-                  <CardDescription>Events you've posted across India</CardDescription>
+                  <CardDescription>Your events from the database</CardDescription>
                 </div>
-                <Button size="sm">Post New Event</Button>
-          </CardHeader>
-          <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {postedEvents.map((ev, idx) => (
-                    <Card key={idx} className="h-full">
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          {ev.title}
-                          <Badge variant={ev.level === 'National' ? 'default' : ev.level === 'State' ? 'secondary' : 'outline'}>{ev.level}</Badge>
-                        </CardTitle>
-                        <CardDescription>
-                          <span className="inline-flex items-center gap-1 mr-4"><Calendar className="w-4 h-4" />{ev.date}</span>
-                          <span className="inline-flex items-center gap-1"><MapPin className="w-4 h-4" />{ev.city}, {ev.state}</span>
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-foreground">{ev.description}</p>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">Upload Event Poster</Button>
-                          {ev.link && (
-                            <a href={ev.link} target="_blank" rel="noreferrer" className="inline-flex items-center text-sm text-primary underline">
-                              <LinkIcon className="w-4 h-4 mr-1" /> Registration Link
-                            </a>
-                          )}
-            </div>
-          </CardContent>
-        </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}><Plus className="w-4 h-4 mr-1" /> Post New Event</Button>
+              </CardHeader>
+              <CardContent>
+                {loadingEvents ? (
+                  <div className="py-10 text-center text-muted-foreground">Loading events...</div>
+                ) : events.length === 0 ? (
+                  <div className="py-10 text-center text-muted-foreground">No events yet. Click "Post New Event" to create one.</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {events.map((ev) => (
+                      <Card key={ev._id} className="h-full">
+                        <CardHeader>
+                          <CardTitle className="text-lg flex items-center justify-between gap-2">
+                            <span>{ev.title}</span>
+                            <div className="flex items-center gap-2">
+                              <Button size="icon" variant="outline" onClick={() => { setEditing(ev); setModalOpen(true); }}><Pencil className="w-4 h-4" /></Button>
+                              <Button size="icon" variant="outline" onClick={async () => { await eventAPI.deleteEvent(ev._id); await loadEvents(); }}><Trash2 className="w-4 h-4" /></Button>
+                            </div>
+                          </CardTitle>
+                          <CardDescription>
+                            <span className="inline-flex items-center gap-1 mr-4"><Calendar className="w-4 h-4" />{new Date(ev.dateTime).toLocaleString()}</span>
+                            <span className="inline-flex items-center gap-1"><MapPin className="w-4 h-4" />{ev.location}</span>
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-foreground">{ev.description}</p>
+                          {ev.contactInfo && <p className="text-sm text-muted-foreground">Contact: {ev.contactInfo}</p>}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+              {modalOpen && (
+                <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                  <DialogContent className="sm:max-w-[600px] w-full">
+                    <DialogHeader>
+                      <DialogTitle>{editing ? 'Edit Event' : 'Post New Event'}</DialogTitle>
+                    </DialogHeader>
+                    <EventForm onClose={() => setModalOpen(false)} item={editing || undefined} />
+                  </DialogContent>
+                </Dialog>
+              )}
+            </Card>
         </motion.div>
 
           {/* Player Applications */}

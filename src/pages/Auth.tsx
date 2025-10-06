@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,7 +75,7 @@ const Auth = () => {
           title: "Login Successful",
           description: "Welcome back!",
         });
-        navigate('/dashboard');
+        navigate('/');
       } else {
         if (formData.password !== formData.confirmPassword) {
           toast({
@@ -99,7 +98,7 @@ const Auth = () => {
           title: "Registration Successful",
           description: "Account created successfully!",
         });
-        navigate('/details');
+        navigate('/');
       }
     } catch (error: any) {
       toast({

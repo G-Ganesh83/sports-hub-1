@@ -3,9 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { config } from './config/wagmi';
 import { ProfileProvider } from './context/ProfileContext';
 import { AuthProvider } from './context/AuthContext';
 import Index from "./pages/Index";
@@ -23,21 +20,18 @@ import Details from "./pages/Details";
 import PrivateRoute from "./components/PrivateRoute";
 import Test from "./pages/Test";
 
-import '@rainbow-me/rainbowkit/styles.css';
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <WagmiProvider config={config}>
-    <QueryClientProvider client={queryClient}>
-      <RainbowKitProvider>
-        <TooltipProvider>
-          <AuthProvider>
-            <ProfileProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-            <Routes>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AuthProvider>
+        <ProfileProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+        <Routes>
               <Route path="/test" element={<Test />} />
               <Route path="/signup" element={<Navigate to="/auth?mode=register" replace />} />
               <Route path="/login" element={<Navigate to="/auth?mode=login" replace />} />
@@ -45,8 +39,8 @@ const App = () => (
               <Route element={<PrivateRoute />}>
                 <Route path="/details" element={<Details />} />
               </Route>
-              {/* Redirect root to login first */}
-              <Route path="/" element={<Navigate to="/auth?mode=login" replace />} />
+              {/* Home page at root */}
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
@@ -56,14 +50,12 @@ const App = () => (
               <Route path="/fan" element={<Fan />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-            </ProfileProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </RainbowKitProvider>
-    </QueryClientProvider>
-  </WagmiProvider>
+          </Routes>
+        </BrowserRouter>
+        </ProfileProvider>
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

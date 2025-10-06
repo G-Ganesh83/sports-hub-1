@@ -4,13 +4,15 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 
 export default function Profile() {
   const { profile, setProfile } = useProfile();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [dbProfile, setDbProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +76,6 @@ export default function Profile() {
     if (userType === 'player') {
       return {
         name: dbProfile?.fullName || profile.fullName,
-        walletAddress: '0x0000000000000000000000000000000000000000',
         avatarUrl: dbProfile?.avatarUrl || profile.photoUrl,
         age: dbProfile?.age || (profile as any).age,
         sport: dbProfile?.sport || profile.sport,
@@ -89,7 +90,6 @@ export default function Profile() {
     }
     return {
       name: dbProfile?.fullName || user?.name || profile.fullName,
-      walletAddress: '0x0000000000000000000000000000000000000000',
       avatarUrl: dbProfile?.avatarUrl || profile.photoUrl,
       tagline: dbProfile?.bio || profile.bio,
       expertise: dbProfile?.extra?.expertise || (profile as any).expertise,
@@ -115,10 +115,17 @@ export default function Profile() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            ← Back
+          </Button>
+          <Button variant="outline" onClick={() => { logout(); navigate('/'); }}>
+            Logout
+          </Button>
+        </div>
         <ProfileHeader
           userType={userType}
           name={currentUser.name}
-          walletAddress={currentUser.walletAddress}
           avatarUrl={currentUser.avatarUrl}
           age={(currentUser as any).age}
           sport={(currentUser as any).sport}

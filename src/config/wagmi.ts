@@ -1,9 +1,2 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
-
-export const config = getDefaultConfig({
-  appName: 'SportsHub India',
-  projectId: 'YOUR_PROJECT_ID', // Get this from WalletConnect Cloud
-  chains: [mainnet, polygon, optimism, arbitrum],
-  ssr: false,
-});
+// Wallet removed
+export const config = {} as any;

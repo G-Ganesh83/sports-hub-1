@@ -12,7 +12,12 @@ const connectDB = async () => {
         deprecationErrors: true,
       }
     });
+    const { host, name } = mongoose.connection;
+    // Redact potential credentials from URI in logs
+    const safeUri = (process.env.MONGO_URI || '').replace(/:\\S+@/, ':***@');
     console.log("✅ MongoDB connected successfully!");
+    console.log(`   ↳ Host: ${host}  DB: ${name}`);
+    if (safeUri) console.log(`   ↳ URI: ${safeUri}`);
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err.message);
     process.exit(1);

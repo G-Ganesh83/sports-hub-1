@@ -1,10 +1,14 @@
 import { Layout } from '@/components/Layout';
 import { Hero } from '@/components/Hero';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin } from 'lucide-react';
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   return (
     <Layout>
       <Hero />
@@ -90,7 +94,12 @@ const Index = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-primary text-white text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold mb-4">Be the next sports star. Start your journey today.</h2>
-          <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">Get Started</Button>
+          {isAuthenticated ? (
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90" onClick={() => navigate('/dashboard')}>Dashboard</Button>
+          ) : (
+            <Button size="lg" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:shadow-lg" onClick={() => navigate('/auth')}>Get Started</Button>
+          )}
+          <p className="mt-3 text-white/80 text-sm">Use your browser back button to return here anytime.</p>
         </div>
       </section>
     </Layout>
