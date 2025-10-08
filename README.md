@@ -113,12 +113,7 @@
 ---
 
 ## 📹 Demonstration Video
-▶️ [YouTube / Google Drive Link](#)
-
----
-
-## 🌐 Deployment
-🔗 [Live Demo Link](#)
+https://drive.google.com/file/d/1rXSnMU0o_mnu1rDhjVE0vuR7Ql-p2K65/view?usp=drivesdk
 
 ---
 
