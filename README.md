@@ -82,14 +82,14 @@
 ---
 
 ## 👥 Team Details
-**Team Name:** `Your Team Name Here`
+**Team Name:** `Aether`
 
 | Name | Role | Email |
 |---|---:|---|
-| Member 1 Name| Team Lead | member1@example.com |
-| Member 2 Name| Team Member| member2@example.com |
-| Member 3 Name| Team Member | member3@example.com |(Optional)
-| Member 4 Name| Team Member | member4@example.com |(Optional)
+| G.Ganesh | Team Lead | giriganesh1304@gmail.com |
+| P.Kawshik | Team Member| kawshikkshriidatta@gmail.com |
+| G.Sri Karun | Team Member | srikarungade@gmail.com |
+| N.Shyam | Team Member | narojushyamshyamnaroju@gmail.com |
 
 ---
 
@@ -125,7 +125,7 @@
 
 ## 🖼️ Assets 
 <p align="center">
-  <img src="assets/hero-sports-illustration.jpg" alt="Application Screenshot" width="220" /><br/>
+  <img src="sports-hub-1/src/assets/hero-sports-illustration.jpg" alt="Application Screenshot" width="220" /><br/>
 </p>
 
 ---
